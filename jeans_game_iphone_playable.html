@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ג'ינסים! - משחק</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Arial",sans-serif}
+body{background:#000}
+.game{position:relative;width:100%;height:100%;max-width:430px;margin:auto;overflow:hidden;
+background:linear-gradient(180deg,#ff3b30 0%,#ff9500 22%,#34c759 50%,#007aff 78%,#5856d6 100%);
+color:#fff;padding:18px 18px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between;padding-top:env(safe-area-inset-top)}
+.icon{width:48px;height:48px;border:0;border-radius:50%;font-size:24px;font-weight:900;box-shadow:0 5px 14px #0005}
+.sound{background:#ffd60a}.help{background:#32d7f2}
+.clock{background:#0006;border:1px solid #fff4;border-radius:25px;padding:7px 18px;font-size:29px;font-weight:900}
+.inventory{margin-top:12px;text-align:center}
+.pill{display:inline-flex;align-items:center;gap:10px;background:#20b957;border:2px solid #ffffff44;border-radius:30px;padding:10px 22px;font-size:23px;font-weight:900;box-shadow:0 8px 18px #0003}
+.badges{display:flex;justify-content:center;gap:8px;margin-top:8px}
+.badge{font-size:12px;font-weight:800;background:#0003;border:1px solid #fff2;padding:5px 10px;border-radius:20px}
+.center{flex:1;display:flex;align-items:center;justify-content:center}
+.wheel{width:270px;height:270px;border-radius:50%;padding:12px;background:conic-gradient(#ff9500 0 25%,#ffffff33 25% 100%);display:flex;align-items:center;justify-content:center}
+.core{width:235px;height:235px;border-radius:50%;background:#16b9d8e8;border:4px solid #ffffff55;box-shadow:0 12px 35px #0006;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.sec{font-size:54px;font-weight:900;line-height:1}.small{font-size:12px;font-weight:800;background:#0003;border-radius:15px;padding:4px 10px;margin-top:7px}.jean{font-size:52px;margin-top:7px}
+.actions{display:flex;flex-direction:column;gap:10px}
+.claim{width:100%;padding:17px;border:2px solid #fff7;border-radius:24px;background:linear-gradient(90deg,#ffc433,#ff8c21);font-size:28px;font-weight:900;color:#17202a;box-shadow:0 9px 20px #0005}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sub{padding:13px;border:1px solid #fff5;border-radius:18px;background:#ffffff2b;color:#fff;font-size:17px;font-weight:800}
+button:active{transform:scale(.96)}
+.footer{text-align:center;color:#ffffff99;font-size:11px;margin-top:8px}
+.modal{position:absolute;inset:0;background:#000d;backdrop-filter:blur(10px);z-index:5;padding:22px;display:none;flex-direction:column}
+.modal.show{display:flex}
+.modal h2{margin:0 0 18px;font-size:27px}
+.modal .content{flex:1;font-size:16px;line-height:1.7}
+.close{border:0;border-radius:18px;padding:13px;background:#24c36b;color:#fff;font-size:18px;font-weight:900}
+.shopitem{display:flex;align-items:center;justify-content:space-between;background:#ffffff14;border:1px solid #fff3;border-radius:18px;padding:14px;margin-bottom:12px}
+.buy{border:0;border-radius:12px;padding:9px 13px;background:#ffd60a;font-weight:900}
+.particle{position:absolute;font-size:25px;font-weight:900;color:#ffeb3b;pointer-events:none;animation:up .8s forwards;text-shadow:0 2px 8px #000}
+@keyframes up{from{opacity:1;transform:translate(-50%,0) scale(.8)}to{opacity:0;transform:translate(-50%,-80px) scale(1.2)}}
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="top">
+    <button class="icon sound" id="sound">🔔</button>
+    <div class="clock" id="clock">00:00</div>
+    <button class="icon help" id="help">?</button>
+  </div>
+
+  <div class="inventory">
+    <div class="pill">⭐ ג'ינסים: <span id="count">0</span></div>
+    <div class="badges"><span class="badge">שעה עגולה: פעיל</span><span class="badge">דרופ: פי 2</span></div>
+  </div>
+
+  <div class="center">
+    <div class="wheel">
+      <div class="core" id="tap">
+        <div class="sec" id="seconds">17</div>
+        <div class="small">שניות לדרופ הבא</div>
+        <div class="jean">👖</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="claim" id="claim">קבל ג'ינס 👖</button>
+    <div class="row">
+      <button class="sub" id="shop">🛍️ חנות</button>
+      <button class="sub" id="share">📤 שיתוף</button>
+    </div>
+    <div class="footer">המשחק עובד גם בלי אינטרנט</div>
+  </div>
+
+  <div class="modal" id="helpModal">
+    <h2>איך משחקים? ⭐</h2>
+    <div class="content">
+      <p>1. 🕒 הטיימר סופר לאחור.</p>
+      <p>2. 👖 לוחצים על "קבל ג'ינס" וצוברים ג'ינסים.</p>
+      <p>3. 🛍️ בחנות אפשר להוסיף חבילות ג'ינסים למשחק.</p>
+    </div>
+    <button class="close" data-close="helpModal">הבנתי, בוא נשחק!</button>
+  </div>
+
+  <div class="modal" id="shopModal">
+    <h2>🛍️ חנות הג'ינסים</h2>
+    <div class="content">
+      <div class="shopitem"><div><b>1,000 ג'ינסים</b><br><small>חבילת התחלה</small></div><button class="buy" data-add="1000">+1,000</button></div>
+      <div class="shopitem"><div><b>5,000 ג'ינסים</b><br><small>הכי משתלם!</small></div><button class="buy" data-add="5000">+5,000</button></div>
+      <div class="shopitem"><div><b>12,000 ג'ינסים</b><br><small>חבילת אספנים</small></div><button class="buy" data-add="12000">+12,000</button></div>
+    </div>
+    <button class="close" data-close="shopModal">סגור וחזור למשחק</button>
+  </div>
+</div>
+
+<script>
+let count=Number(localStorage.getItem("jeans_count")||0);
+let seconds=17;
+let sound=true;
+const $=id=>document.getElementById(id);
+function render(){ $("count").textContent=count.toLocaleString("he-IL"); }
+function add(n){
+  count+=n; localStorage.setItem("jeans_count",count); render();
+  const p=document.createElement("div"); p.className="particle"; p.textContent="+"+n+" 👖";
+  p.style.left="50%";p.style.top="48%";$("tap").appendChild(p);setTimeout(()=>p.remove(),800);
+  if(sound) try{let a=new AudioContext(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=660;g.gain.value=.12;o.start();o.stop(a.currentTime+.12)}catch(e){}
+}
+$("claim").onclick=()=>add(1);
+$("tap").onclick=()=>add(1);
+$("sound").onclick=()=>{sound=!sound;$("sound").textContent=sound?"🔔":"🔕"};
+$("help").onclick=()=>$("helpModal").classList.add("show");
+$("shop").onclick=()=>$("shopModal").classList.add("show");
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove("show"));
+document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(Number(b.dataset.add)));
+$("share").onclick=async()=>{
+ let text="יש לי כבר "+count.toLocaleString()+" ג'ינסים במשחק! 👖";
+ if(navigator.share) try{await navigator.share({title:"ג'ינסים!",text})}catch(e){}
+ else alert(text);
+};
+setInterval(()=>{
+ const d=new Date();
+ $("clock").textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+ seconds--;if(seconds<0)seconds=59;$("seconds").textContent=seconds;
+},1000);
+render();
+</script>
+</body>
+</html>
